@@ -1,0 +1,87 @@
+import pandas as pd
+import numpy as np
+from sklearn import preprocessing
+#import OneHotEncoder()
+import matplotlib.pyplot as plt
+import seaborn as sns
+#import Quandl
+import math
+#from sklearn.preprocessing import OneHotEncoder()
+from sklearn.linear_model import Lasso
+
+dataframe = pd.read_csv('d:/Downloads/TADPOLE_D1_D2.csv')
+names = ['Ventricles', 'Hippocampus', 'WholeBrain', 'Entorhinal', 'MidTemp']
+a='d:/Downloads/TADPOLE_D1_D2.csv'
+dataframe = pd.read_csv(a, names=names)
+print(dataframe.shape)
+print(dataframe.info()) 
+#model = Lasso(alpha=1.0)
+from numpy import mean
+from numpy import std
+from numpy import absolute
+from pandas import read_csv
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import RepeatedKFold
+from sklearn.linear_model import Lasso
+
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import Lasso
+#categorical_cols = ['PTETHCAT'] 
+#from sklearn.datasets import load_diabetes
+#X,y = dataframe(return_X_y=True)
+array = dataframe.values
+X = array[:,0:4]
+y = array[:,4]
+#features = dataframe['feature_names']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+#print(X_train.info()) print(X_test.info())
+pipeline = Pipeline([
+                     ('scaler',StandardScaler()),
+                     ('model',Lasso())
+])
+search = GridSearchCV(pipeline,
+                      {'model__alpha':np.arange(0.1,10,0.1)},
+                      cv = 5, scoring="neg_mean_squared_error",verbose=3
+                      )
+search.fit(X_train,y_train)
+search.best_params_
+coefficients = search.best_estimator_.named_steps['model'].coef_
+importance = np.abs(coefficients)
+np.array(names)[importance > 0]
+np.array(names)[importance == 0]
+from sklearn.preprocessing import LabelEncoder
+# instantiate labelencoder object
+le = LabelEncoder()
+
+# apply le on categorical feature columns
+#dataframe[categorical_cols] = dataframe[categorical_cols].apply(lambda col: le.fit_transform(col))    
+#from sklearn.preprocessing import OneHotEncoder
+#ohe = OneHotEncoder()
+
+#One-hot-encode the categorical columns.
+#Unfortunately outputs an array instead of dataframe.
+#array_hot_encoded = ohe.fit_transform(dataframe[categorical_cols])
+
+#Convert it to df
+#data_hot_encoded = pd.DataFrame(array_hot_encoded, index=dataframe.index)
+
+#Extract only the columns that didnt need to be encoded
+#data_other_cols = dataframe.drop(columns=categorical_cols)
+
+#Concatenate the two dataframes : 
+#data_out = pd.concat([data_hot_encoded, data_other_cols], axis=1)
+# load the dataset
+#data = dataframe.values
+#X, y = data[1,4], data[1,4]
+# define model
+model = Lasso(alpha=1.0)
+# define model evaluation method
+cv = RepeatedKFold(n_splits=2, n_repeats=3, random_state=1)
+# evaluate model
+scores = cross_val_score(model, X, y, scoring='neg_mean_absolute_error', cv=cv, n_jobs=-1)
+# force scores to be positive
+scores = absolute(scores)
+print('Mean MAE: %.3f (%.3f)' % (mean(scores), std(scores)))
